@@ -459,3 +459,16 @@ function convert{N}(::Type{Array{PyObject,N}}, o::PyObject)
 end
 
 #########################################################################
+# Sparse matrix conversions.
+# Note: As of 0.4.3, julia only supports CSC sparse matrices.
+
+PyObject(S::SparseMatrixCSC) =
+    pyimport("scipy.sparse")["csc_matrix"](
+        (S.nzval, S.rowval .- 1, S.colptr .- 1), shape=size(S))
+
+function convert{N}(::Type{SparseMatrixCSC{PyObject,N}}, o::PyObject)
+    # map(pyincref, convert(SparseMatrixCSC{PyPtr, N}, o))
+    SparseMatrixCSC(o[:shape][1], o[:shape][2], o[:indptr] .+ 1, o[:indices] .+ 1, o[:data])
+end
+
+#########################################################################
